@@ -1,0 +1,6 @@
+pystray 
+requests 
+Pillow
+pyinstaller
+filelock
+pywin32
