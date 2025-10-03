@@ -1,7 +1,5 @@
 # DuckDNS Connector
 
-![DuckDNS Connector Icon](logo.ico)
-
 **DuckDNS Connector** is a lightweight, modern, and easy-to-use desktop application for Windows that automatically keeps your DuckDNS domains updated with your public IP address. It runs silently in the system tray, requires minimal setup, and provides notifications to keep you informed.
 
 This application is built with Python and its native `tkinter` library, styled with a modern, dark theme for a clean user interface.
