@@ -38,16 +38,31 @@ def set_window_icon_win32(window):
         logging.error(f"Failed to set Windows-specific icon: {e}")
 
 # --- Application Constants ---
-APP_NAME = "DuckDNS Connector" # REBRAND
-APP_VERSION = "1.0.0" # REBRAND
-CONFIG_FILE = "config.ini"
+APP_NAME = "DuckDNS Connector"
+APP_VERSION = "1.0.0"
+
+# --- FIX: Function to get the correct path for AppData ---
+def get_app_data_path():
+    """Gets the path to the application's data folder in AppData\Local."""
+    # On Windows, this is typically C:\Users\<username>\AppData\Local
+    app_data_dir = os.path.join(os.getenv('LOCALAPPDATA', os.path.expanduser("~")), APP_NAME)
+    
+    # Create the directory if it doesn't exist
+    os.makedirs(app_data_dir, exist_ok=True)
+    return app_data_dir
+
+# --- FIX: Define paths for config, log, and lock files in AppData ---
+APP_DATA_PATH = get_app_data_path()
+CONFIG_FILE = os.path.join(APP_DATA_PATH, "config.ini")
+LOG_FILE = os.path.join(APP_DATA_PATH, "duckdns_connector.log")
+LOCK_FILE = os.path.join(APP_DATA_PATH, "duckdns_connector.lock")
 
 # --- Setup Logging ---
 def setup_logging():
     """Sets up a basic file logger."""
     log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    log_file = 'duckdns_connector.log' # REBRAND log file name
-    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    # Use the globally defined LOG_FILE path
+    file_handler = logging.FileHandler(LOG_FILE, encoding='utf-8')
     file_handler.setFormatter(log_formatter)
     file_handler.setLevel(logging.INFO)
     root_logger = logging.getLogger()
@@ -288,6 +303,7 @@ class ModernMessageBox(tk.Toplevel):
 
 # --- ConfigManager ---
 class ConfigManager:
+    # Use the globally defined CONFIG_FILE path
     def __init__(self, filename=CONFIG_FILE):
         self.filename = filename
         self.config = configparser.ConfigParser()
@@ -370,10 +386,8 @@ class ModernSettingsWindow(tk.Toplevel):
         super().__init__(master)
         self.save_callback = save_callback
 
-        # --- FIX FOR FLASHING WINDOW ---
         self.withdraw()
         self.attributes('-alpha', 0.0)
-        # --- END OF FIX ---
 
         self.title(f"{APP_NAME} Settings")
         self.resizable(False, False) 
@@ -388,7 +402,6 @@ class ModernSettingsWindow(tk.Toplevel):
         self._create_app_settings_card(self.content_frame, current_settings)
         self._build_footer()
 
-        # --- FIX FOR FLASHING WINDOW (PART 2) ---
         self.update_idletasks()
         width, height = 560, 660
         screen_w = self.winfo_screenwidth()
@@ -399,7 +412,6 @@ class ModernSettingsWindow(tk.Toplevel):
         self.minsize(width, height)
         self.deiconify()
         self._fade_in()
-        # --- END OF FIX ---
         
         self.focus()
 
@@ -507,11 +519,9 @@ class ModernSettingsWindow(tk.Toplevel):
         self.interval_combo = ttk.Combobox(interval_frame, values=["5", "10", "15", "30", "60"], state="readonly", style='Modern.TCombobox')
         self.interval_combo.set(settings.get("interval", "5")); self.interval_combo.pack(fill="x")
         
-        # --- FIX: Disable mouse wheel scrolling on Combobox ---
         self.interval_combo.bind("<MouseWheel>", lambda e: "break")
         self.interval_combo.bind("<Button-4>", lambda e: "break")
         self.interval_combo.bind("<Button-5>", lambda e: "break")
-        # --- END OF FIX ---
         
         tk.Label(interval_frame, text="How often to check for IP changes (in minutes)", fg=THEME["text_tertiary"], bg=THEME["bg_secondary"], font=("Segoe UI", 9, "italic")).pack(anchor="w", pady=(8, 0))
 
@@ -521,11 +531,9 @@ class ModernSettingsWindow(tk.Toplevel):
         self.notify_combo = ttk.Combobox(notify_frame, values=["YES", "NO"], state="readonly", style='Modern.TCombobox')
         self.notify_combo.set(settings.get("notifications", "YES")); self.notify_combo.pack(fill="x")
 
-        # --- FIX: Disable mouse wheel scrolling on Combobox ---
         self.notify_combo.bind("<MouseWheel>", lambda e: "break")
         self.notify_combo.bind("<Button-4>", lambda e: "break")
         self.notify_combo.bind("<Button-5>", lambda e: "break")
-        # --- END OF FIX ---
         
         tk.Label(notify_frame, text="Show system notifications for updates", fg=THEME["text_tertiary"], bg=THEME["bg_secondary"], font=("Segoe UI", 9, "italic")).pack(anchor="w", pady=(8, 0))
 
@@ -700,8 +708,8 @@ def show_warning_message(title, message):
     temp_root = tk.Tk(); temp_root.withdraw(); messagebox.showwarning(title, message); temp_root.destroy()
 
 if __name__ == "__main__":
-    lock_path = os.path.join(os.path.expanduser("~"), "duckdns_connector.lock") # REBRAND lock file
-    lock = FileLock(lock_path, timeout=1)
+    # Use the globally defined LOCK_FILE path
+    lock = FileLock(LOCK_FILE, timeout=1)
 
     try:
         lock.acquire(timeout=0)
