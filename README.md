@@ -1,6 +1,6 @@
 # DuckDNS Connector
 
-![DuckDNS Connector Icon](logo.png)
+![DuckDNS Connector Icon](logo.ico)
 
 **DuckDNS Connector** is a lightweight, modern, and easy-to-use desktop application for Windows that automatically keeps your DuckDNS domains updated with your public IP address. It runs silently in the system tray, requires minimal setup, and provides notifications to keep you informed.
 
@@ -26,7 +26,7 @@ Developed by **thirawat27**.
 You can easily install DuckDNS Connector on your Windows machine by following these steps:
 
 1.  **Download the Installer:**
-    *   Go to the [**Releases**](https://github.com/thirawat27/DuckDNS-connection/releases) page of this repository.
+    *   Go to the [**Releases**](https://github.com/thirawat27/DuckDNS-Connector/releases) page of this repository.
     *   Download the latest `DuckDNS-Connector-vX.X.X-Setup.exe` file.
 
 2.  **Run the Installer:**
@@ -82,8 +82,8 @@ If you prefer to build the application from the source code, follow these steps.
 
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/thirawat27/DuckDNS-connection.git
-    cd DuckDNS-connection
+    git clone https://github.com/thirawat27/DuckDNS-Connector.git
+    cd DuckDNS-Connector
     ```
 
 2.  **Create a Virtual Environment (Recommended):**
@@ -109,10 +109,10 @@ If you prefer to build the application from the source code, follow these steps.
     pip install pyinstaller
     pyinstaller build.spec
     ```
-    The final application will be located in the `dist\DuckDNS-Connector` folder.
+    The final executable will be located in the `dist` folder.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.# DuckDNS-Connector
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
