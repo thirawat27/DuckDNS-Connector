@@ -43,7 +43,7 @@ You can easily install DuckDNS Connector on your Windows machine by following th
 
 ### First-Time Setup
 
-1.  **Find the Icon:** Locate the DuckDNS Connector icon in your system tray. You may need to click the small upward arrow (^) to see all icons.
+1.  **Find the Icon :** Locate the DuckDNS Connector icon in your system tray. You may need to click the small upward arrow (^) to see all icons.
 
 2.  **Open Settings :**
     *   **Right-click** on the icon to open the menu.
