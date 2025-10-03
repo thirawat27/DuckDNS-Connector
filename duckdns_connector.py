@@ -35,15 +35,15 @@ def set_window_icon_win32(window):
             ctypes.windll.user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, h_icon)
             ctypes.windll.user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, h_icon)
     except Exception as e:
-        logging.error(f"Failed to set Windows-specific icon: {e}")
+        logging.error(f"Failed to set Windows-specific icon : {e}")
 
 # --- Application Constants ---
 APP_NAME = "DuckDNS Connector"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.3" # Version updated
 
-# --- FIX: Function to get the correct path for AppData ---
+# --- Function to get the correct path for AppData ---
 def get_app_data_path():
-    """Gets the path to the application's data folder in AppData\Local."""
+    """Gets the path to the application's data folder in AppData\\Local.""" # Escaped backslash to remove SyntaxWarning
     # On Windows, this is typically C:\Users\<username>\AppData\Local
     app_data_dir = os.path.join(os.getenv('LOCALAPPDATA', os.path.expanduser("~")), APP_NAME)
     
@@ -51,7 +51,7 @@ def get_app_data_path():
     os.makedirs(app_data_dir, exist_ok=True)
     return app_data_dir
 
-# --- FIX: Define paths for config, log, and lock files in AppData ---
+# --- Define paths for config, log, and lock files in AppData ---
 APP_DATA_PATH = get_app_data_path()
 CONFIG_FILE = os.path.join(APP_DATA_PATH, "config.ini")
 LOG_FILE = os.path.join(APP_DATA_PATH, "duckdns_connector.log")
@@ -184,7 +184,7 @@ def setup_styles(root):
               background=[('active', THEME["bg_tertiary"])],
               foreground=[('active', THEME["accent_primary"])])
 
-# --- UI-FIX: Helper function to draw rounded rectangles on a canvas ---
+# --- UI Helper function to draw rounded rectangles on a canvas ---
 def create_rounded_rect(canvas, x1, y1, x2, y2, r, **kwargs):
     """Helper to draw a rounded rectangle on a given canvas."""
     return canvas.create_polygon(
@@ -299,7 +299,7 @@ class ModernMessageBox(tk.Toplevel):
                 self.iconbitmap(LOGO_FILE)
                 set_window_icon_win32(self)
         except Exception as e:
-            logging.warning(f"Could not set icon for ModernMessageBox: {e}")
+            logging.warning(f"Could not set icon for ModernMessageBox : {e}")
 
 # --- ConfigManager ---
 class ConfigManager:
@@ -312,7 +312,7 @@ class ConfigManager:
     def load(self):
         try:
             self.config.read(self.filename, encoding='utf-8')
-        except Exception as e: logging.error(f"Error reading config file: {e}")
+        except Exception as e: logging.error(f"Error reading config file : {e}")
         if "DuckDNS" not in self.config: self.config["DuckDNS"] = {"domain": "", "token": ""}
         if "Settings" not in self.config: self.config["Settings"] = {"interval": "5", "notifications": "YES"}
         logging.info("Configuration loaded.")
@@ -321,7 +321,7 @@ class ConfigManager:
         try:
             with open(self.filename, "w", encoding='utf-8') as configfile: self.config.write(configfile)
             logging.info("Configuration saved.")
-        except Exception as e: logging.error(f"Error saving config file: {e}")
+        except Exception as e: logging.error(f"Error saving config file : {e}")
 
     def get(self, section, option, fallback=None):
         return self.config.get(section, option, fallback=fallback)
@@ -347,7 +347,7 @@ class DuckDNSClient:
             logging.info("Internet connection check successful.")
             return True
         except OSError as e:
-            logging.warning(f"Internet connection check failed: {e}")
+            logging.warning(f"Internet connection check failed : {e}")
             return False
 
     def get_public_ip(self):
@@ -359,10 +359,31 @@ class DuckDNSClient:
                 if self._is_valid_ip(ip):
                     logging.info(f"Successfully retrieved public IP {ip} from {provider}")
                     return ip
-                else: logging.warning(f"Invalid IP format received from {provider}: {ip}")
-            except requests.RequestException as e: logging.warning(f"Failed to get IP from {provider}: {e}")
+                else: logging.warning(f"Invalid IP format received from {provider} : {ip}")
+            except requests.RequestException as e: logging.warning(f"Failed to get IP from {provider} : {e}")
         logging.error("All public IP providers failed.")
         return None
+    
+    def check_service_port(self, host, port, timeout=3):
+        """Checks if a TCP port is open on a given host."""
+        try:
+            port = int(port)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(timeout)
+                s.connect((host, port))
+            logging.info(f"Port check successful for {host}:{port}.")
+            return True, f"Success : Port {port} is open on {host}."
+        except TimeoutError:
+            logging.warning(f"Port check timed out for {host}:{port}.")
+            return False, f"Failed : Port {port} is closed (Connection timed out)."
+        except (socket.gaierror, TypeError):
+            logging.warning(f"Hostname could not be resolved : {host}.")
+            return False, f"Error : Hostname '{host}' could not be resolved."
+        except ValueError:
+            return False, f"Error : Invalid port number."
+        except Exception as e:
+            logging.error(f"Error checking port {host}:{port} : {e}")
+            return False, f"Failed : Port {port} is closed (Connection refused)."
 
     def _is_valid_ip(self, ip):
         if re.match(r'^(\d{1,3}\.){3}\d{1,3}$', ip): return all(0 <= int(part) <= 255 for part in ip.split('.'))
@@ -374,10 +395,10 @@ class DuckDNSClient:
             response = requests.get("https://www.duckdns.org/update", params=params, timeout=10)
             response.raise_for_status()
             result = response.text.strip()
-            logging.info(f"DuckDNS update response: {result}")
+            logging.info(f"DuckDNS update response : {result}")
             return result
         except requests.RequestException as e:
-            logging.error(f"DuckDNS update request failed: {e}")
+            logging.error(f"DuckDNS update request failed : {e}")
             return "ERROR"
 
 # --- Modern Settings Window ---
@@ -394,6 +415,10 @@ class ModernSettingsWindow(tk.Toplevel):
         self.configure(bg=THEME["bg_primary"])
         self.after(100, self._apply_icon_delayed)
 
+        # ERROR Set up the protocol handler for closing the window.
+        # This ensures our cleanup logic is called when the user clicks the 'X' button.
+        self.protocol("WM_DELETE_WINDOW", self._close_and_cleanup)
+
         self.grid_rowconfigure(0, weight=1); self.grid_rowconfigure(1, weight=0); self.grid_columnconfigure(0, weight=1)
 
         self._build_scroll_area()
@@ -401,6 +426,13 @@ class ModernSettingsWindow(tk.Toplevel):
         self._create_credentials_card(self.content_frame, current_settings)
         self._create_app_settings_card(self.content_frame, current_settings)
         self._build_footer()
+
+        # ERROR Bind mouse wheel events after all UI elements are created.
+        # We bind to the whole application ('bind_all') so scrolling works seamlessly.
+        # The cleanup method ensures these bindings are removed when the window closes.
+        self.bind_all("<MouseWheel>", self._on_mousewheel)
+        self.bind_all("<Button-4>", self._on_mousewheel)
+        self.bind_all("<Button-5>", self._on_mousewheel)
 
         self.update_idletasks()
         width, height = 560, 660
@@ -415,6 +447,37 @@ class ModernSettingsWindow(tk.Toplevel):
         
         self.focus()
 
+    # ERROR New method to handle mouse wheel scrolling safely.
+    def _on_mousewheel(self, event):
+        """
+        Handles mouse wheel events globally. Checks if the canvas widget
+        still exists before attempting to scroll it. This prevents a
+        _tkinter.TclError if a scroll event occurs after this window
+        has been closed. It handles events for Windows, macOS, and Linux.
+        """
+        if self.canvas.winfo_exists():
+            # For Windows and macOS, which use event.delta
+            if hasattr(event, 'delta') and event.delta != 0:
+                self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            # For Linux, which uses event.num
+            elif hasattr(event, 'num'):
+                if event.num == 4: # Scroll Up
+                    self.canvas.yview_scroll(-1, "units")
+                elif event.num == 5: # Scroll Down
+                    self.canvas.yview_scroll(1, "units")
+
+    # ERROR New method to cleanly close the window and unbind global events.
+    def _close_and_cleanup(self):
+        """
+        Unbinds the global mouse wheel events before closing the window.
+        This is the critical fix to prevent the TclError that occurred
+        when the window was closed but the global binding remained.
+        """
+        self.unbind_all("<MouseWheel>")
+        self.unbind_all("<Button-4>")
+        self.unbind_all("<Button-5>")
+        self._fade_out() # This initiates the fade-out, which ends with self.destroy()
+
     def _build_scroll_area(self):
         outer = tk.Frame(self, bg=THEME["bg_primary"])
         outer.grid(row=0, column=0, sticky="nsew")
@@ -427,9 +490,8 @@ class ModernSettingsWindow(tk.Toplevel):
         self.canvas.create_window((0, 0), window=self.content_frame, anchor="nw")
         self.content_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfig(self.canvas.find_all()[0], width=e.width))
-        self.bind_all("<MouseWheel>", lambda e: self.canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
-        self.bind_all("<Button-4>", lambda e: self.canvas.yview_scroll(-3, "units"))
-        self.bind_all("<Button-5>", lambda e: self.canvas.yview_scroll(3, "units"))
+        # ERROR Removed the problematic bind_all calls from here.
+        # The bindings are now correctly managed in __init__ and _close_and_cleanup.
 
     def _build_header(self, parent):
         header_frame = tk.Frame(parent, bg=THEME["bg_primary"], height=80)
@@ -445,7 +507,8 @@ class ModernSettingsWindow(tk.Toplevel):
         inner.pack(fill="x", padx=30, pady=20)
         inner.grid_columnconfigure(0, weight=1); inner.grid_columnconfigure(1, weight=1)
 
-        cancel_btn = RoundedButton(parent=inner, width=200, height=48, radius=24, text="Cancel", command=self._fade_out,
+        # ERROR Point the Cancel button to the new cleanup method.
+        cancel_btn = RoundedButton(parent=inner, width=200, height=48, radius=24, text="Cancel", command=self._close_and_cleanup,
                                  bg_color=THEME["bg_tertiary"], fg_color=THEME["text_secondary"], hover_color=THEME["bg_hover"])
         cancel_btn.grid(row=0, column=0, sticky="ew", padx=(0, 5))
         
@@ -548,7 +611,8 @@ class ModernSettingsWindow(tk.Toplevel):
         if not re.match(r"^[a-zA-Z0-9-]+$", domain): return ModernMessageBox(self, "Invalid Domain", "Domain format is invalid.\nIt should only contain letters, numbers, and hyphens.", "error")
         if not re.match(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$", token, re.IGNORECASE): return ModernMessageBox(self, "Invalid Token", "The token format appears to be incorrect.\nPlease double-check it on your DuckDNS account page.", "warning")
         self.save_callback({"domain": domain, "token": token, "interval": self.interval_combo.get(), "notifications": self.notify_combo.get()})
-        self._fade_out()
+        # ERROR Call the new cleanup method instead of directly fading out.
+        self._close_and_cleanup()
 
     def _fade_in(self, alpha=0.0):
         if alpha <= 1.0: self.attributes('-alpha', alpha); self.after(20, lambda: self._fade_in(alpha + 0.1))
@@ -558,7 +622,159 @@ class ModernSettingsWindow(tk.Toplevel):
     def _apply_icon_delayed(self):
         try:
             if self.winfo_exists() and os.path.exists(LOGO_FILE): self.iconbitmap(LOGO_FILE); set_window_icon_win32(self)
-        except Exception as e: logging.warning(f"Could not set icon for ModernSettingsWindow: {e}")
+        except Exception as e: logging.warning(f"Could not set icon for ModernSettingsWindow : {e}")
+
+# --- Port Checker Window ---
+class PortCheckerWindow(tk.Toplevel):
+    def __init__(self, master, domain):
+        super().__init__(master)
+        self.client = DuckDNSClient()
+        self.withdraw()
+        self.attributes('-alpha', 0.0)
+
+        self.title("Check Service Port")
+        self.resizable(False, False)
+        self.configure(bg=THEME["bg_primary"])
+        self.after(100, self._apply_icon_delayed)
+
+        main_frame = tk.Frame(self, bg=THEME["bg_primary"])
+        main_frame.pack(fill="both", expand=True, padx=30, pady=25)
+
+        tk.Label(main_frame, text="Check Port Status", fg=THEME["text_primary"], bg=THEME["bg_primary"], font=("Segoe UI", 16, "bold")).pack(pady=(0, 5))
+        tk.Label(main_frame, text="Test if a port for your service is accessible from the internet.", fg=THEME["text_secondary"], bg=THEME["bg_primary"], font=("Segoe UI", 10), wraplength=400).pack(pady=(0, 25))
+
+        tk.Label(main_frame, text="Domain or IP Address", fg=THEME["text_primary"], bg=THEME["bg_primary"], font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 8))
+        self.host_entry = ttk.Entry(main_frame, style='Modern.TEntry', font=("Segoe UI", 10))
+        if domain: self.host_entry.insert(0, f"{domain}.duckdns.org")
+        self.host_entry.pack(fill="x")
+
+        tk.Label(main_frame, text="Port Number", fg=THEME["text_primary"], bg=THEME["bg_primary"], font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(15, 8))
+        self.port_entry = ttk.Entry(main_frame, style='Modern.TEntry', font=("Segoe UI", 10))
+        self.port_entry.pack(fill="x")
+
+        self.status_label = tk.Label(main_frame, text="", fg=THEME["text_secondary"], bg=THEME["bg_primary"], font=("Segoe UI", 10, "italic"), wraplength=400)
+        self.status_label.pack(pady=(20, 0))
+
+        footer = tk.Frame(main_frame, bg=THEME["bg_primary"])
+        footer.pack(fill="x", pady=(25, 0))
+        footer.grid_columnconfigure(0, weight=1); footer.grid_columnconfigure(1, weight=1)
+        
+        close_btn = RoundedButton(parent=footer, width=190, height=45, radius=22, text="Close", command=self._fade_out,
+                                 bg_color=THEME["bg_tertiary"], fg_color=THEME["text_secondary"], hover_color=THEME["bg_hover"])
+        close_btn.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+
+        self.check_btn = RoundedButton(parent=footer, width=190, height=45, radius=22, text="Check", command=self.start_check,
+                               bg_color=THEME["accent_primary"], fg_color=THEME["text_primary"], hover_color=THEME["accent_hover"])
+        self.check_btn.grid(row=0, column=1, sticky="ew", padx=(5, 0))
+        
+        self.update_idletasks()
+        width, height = 500, self.winfo_reqheight()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f"{width}x{height}+{x}+{y}")
+        self.deiconify(); self._fade_in(); self.focus()
+
+    def start_check(self):
+        host = self.host_entry.get().strip()
+        port = self.port_entry.get().strip()
+        if not host or not port:
+            self.update_status("Please enter a Domain/IP and Port.", is_error=True)
+            return
+        
+        self.status_label.config(text="Checking...", foreground=THEME["text_secondary"])
+        self.check_btn.config(state="disabled") # Simple state disable
+        threading.Thread(target=self.run_check, args=(host, port), daemon=True).start()
+
+    def run_check(self, host, port):
+        is_open, message = self.client.check_service_port(host, port)
+        self.after(0, self.update_status, message, not is_open)
+
+    def update_status(self, message, is_error):
+        color = THEME["error"] if is_error else THEME["success"]
+        self.status_label.config(text=message, foreground=color)
+        self.check_btn.config(state="normal")
+
+    def _fade_in(self, alpha=0.0):
+        if alpha <= 1.0: self.attributes('-alpha', alpha); self.after(20, lambda: self._fade_in(alpha + 0.1))
+    def _fade_out(self, alpha=1.0):
+        if alpha >= 0.0: self.attributes('-alpha', alpha); self.after(20, lambda: self._fade_out(alpha - 0.1))
+        else: self.destroy()
+    def _apply_icon_delayed(self):
+        try:
+            if self.winfo_exists() and os.path.exists(LOGO_FILE): self.iconbitmap(LOGO_FILE); set_window_icon_win32(self)
+        except Exception as e: logging.warning(f"Could not set icon for PortCheckerWindow : {e}")
+
+# --- Help Window ---
+class HelpWindow(tk.Toplevel):
+    def __init__(self, master):
+        super().__init__(master)
+        self.withdraw(); self.attributes('-alpha', 0.0)
+        self.title("Guide : Firewall & Port Forwarding")
+        self.resizable(False, False)
+        self.configure(bg=THEME["bg_primary"])
+        self.after(100, self._apply_icon_delayed)
+
+        main_frame = tk.Frame(self, bg=THEME["bg_primary"])
+        main_frame.pack(fill="both", expand=True, padx=30, pady=25)
+        
+        tk.Label(main_frame, text="Guide : Firewall & Port Forwarding", fg=THEME["text_primary"], bg=THEME["bg_primary"], font=("Segoe UI", 16, "bold")).pack(pady=(0, 20), anchor="w")
+
+        help_text_content = """
+What is a Firewall?
+A firewall acts as a security guard for your computer, preventing unauthorized access from the internet. It inspects incoming and outgoing traffic and decides whether to allow it to pass.
+
+What is Port Forwarding?
+It's a setting on your router that says, "If traffic comes to port number X, send it to computer A at IP address x.x.x.x." This is necessary for people on the internet to access services you're running on your computer (like a web server, game server, etc.).
+
+Basic Setup Steps :
+1. Static IP Address : Set your computer's local IP to be static (unchanging).
+2. Login to Router : Access your router's settings page (usually 192.168.1.1).
+3. Find Port Forwarding Settings : Look for a menu named "Port Forwarding," "Virtual Server," or similar.
+4. Create a New Rule : Add a new rule with the following :
+   - External Port : The port you want to open (e.g., 80, 443).
+   - Internal IP : Your computer's static IP address.
+   - Internal Port : The port your application is using (usually the same as the external port).
+   - Protocol : Choose TCP (for web/most services) or UDP (for some games).
+5. Save and Apply : Save your new settings.
+6. Check Windows Firewall : Ensure the Windows Firewall allows your application to use the port you've just configured.
+
+After setting everything up, use the "Check Service Por" menu item in this app to test if your port is successfully opened.
+        """
+
+        text_widget = tk.Text(main_frame, bg=THEME["bg_primary"], fg=THEME["text_secondary"], font=("Segoe UI", 10), wrap="word",
+                              highlightthickness=0, borderwidth=0, relief="flat", height=20)
+        text_widget.pack(fill="x", expand=True)
+        text_widget.insert("1.0", help_text_content.strip())
+        
+        # Styling tags
+        text_widget.tag_configure("bold", font=("Segoe UI", 10, "bold"), foreground=THEME["text_primary"])
+        text_widget.tag_add("bold", "2.0", "3.0")
+        text_widget.tag_add("bold", "6.0", "7.0")
+        text_widget.tag_add("bold", "10.0", "11.0")
+        
+        text_widget.config(state="disabled")
+
+        ok_btn = RoundedButton(parent=main_frame, width=180, height=45, radius=22, text="Got it", command=self._fade_out,
+                               bg_color=THEME["accent_primary"], fg_color=THEME["text_primary"], hover_color=THEME["accent_hover"])
+        ok_btn.pack(pady=(25, 0))
+
+        self.update_idletasks()
+        width, height = 600, self.winfo_reqheight()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f"{width}x{height}+{x}+{y}")
+        self.deiconify(); self._fade_in(); self.focus()
+
+
+    def _fade_in(self, alpha=0.0):
+        if alpha <= 1.0: self.attributes('-alpha', alpha); self.after(20, lambda: self._fade_in(alpha + 0.1))
+    def _fade_out(self, alpha=1.0):
+        if alpha >= 0.0: self.attributes('-alpha', alpha); self.after(20, lambda: self._fade_out(alpha - 0.1))
+        else: self.destroy()
+    def _apply_icon_delayed(self):
+        try:
+            if self.winfo_exists() and os.path.exists(LOGO_FILE): self.iconbitmap(LOGO_FILE); set_window_icon_win32(self)
+        except Exception as e: logging.warning(f"Could not set icon for HelpWindow : {e}")
 
 # --- UpdateWorker ---
 class UpdateWorker(threading.Thread):
@@ -572,7 +788,7 @@ class UpdateWorker(threading.Thread):
         self._running = True; logging.info("UpdateWorker thread started."); time.sleep(2)
         while not self.stop_event.is_set():
             try: self.run_update_cycle()
-            except Exception as e: logging.error(f"Error in update cycle: {e}", exc_info=True); self.app.update_status("Error in update cycle. Check logs.", is_error=True)
+            except Exception as e: logging.error(f"Error in update cycle : {e}", exc_info=True); self.app.update_status("Error in update cycle. Check logs.", is_error=True)
             try: interval_minutes = int(self.app.config.get("Settings", "interval", "5"))
             except ValueError: interval_minutes = 5
             if interval_minutes < 1: interval_minutes = 5
@@ -583,23 +799,23 @@ class UpdateWorker(threading.Thread):
 
     def run_update_cycle(self):
         if self.stop_event.is_set(): return
-        if not self.client.is_connected(): return self.app.update_status("Error: No internet connection.", is_error=True)
+        if not self.client.is_connected(): return self.app.update_status("Error : No internet connection.", is_error=True)
         settings = self.app.config.get_all_settings()
         if not settings["domain"] or not settings["token"]: return self.app.update_status("Configuration missing. Right-click to open Settings.")
         self.app.update_status("Checking public IP...")
         public_ip = self.client.get_public_ip()
         if self.stop_event.is_set(): return
-        if not public_ip: return self.app.update_status("Error: Could not get public IP.", is_error=True)
+        if not public_ip: return self.app.update_status("Error : Could not get public IP.", is_error=True)
         if public_ip != self.last_ip:
-            self.app.update_status(f"New IP: {public_ip}. Updating...")
+            self.app.update_status(f"New IP : {public_ip}. Updating...")
             result = self.client.update_duckdns(settings["domain"], settings["token"], public_ip)
             if "OK" in result:
                 self.last_ip = public_ip
                 self.app.update_status(f"Update successful! IP is now {public_ip}")
                 logging.info(f"IP updated successfully to {public_ip} for domain {settings['domain']}.")
             elif "KO" in result: self.app.update_status("Update failed! Check Domain/Token.", is_error=True); logging.error("Update failed (KO).")
-            else: self.app.update_status("Error connecting to DuckDNS.", is_error=True); logging.error(f"Unknown error from DuckDNS. Response: {result}")
-        else: self.app.update_status(f"IP unchanged: {public_ip}"); logging.info(f"IP address ({public_ip}) has not changed.")
+            else: self.app.update_status("Error connecting to DuckDNS.", is_error=True); logging.error(f"Unknown error from DuckDNS. Response : {result}")
+        else: self.app.update_status(f"IP unchanged : {public_ip}"); logging.info(f"IP address ({public_ip}) has not changed.")
 
     def stop(self):
         logging.info("Stopping UpdateWorker..."); self.stop_event.set(); self.force_update_event.set()
@@ -611,43 +827,54 @@ class UpdateWorker(threading.Thread):
 class DuckDNSSentryApp:
     def __init__(self):
         self.root = tk.Tk(); self.root.withdraw()
-        self.image_for_tray, self.icon, self.settings_window = None, None, None
+        self.image_for_tray, self.icon = None, None
+        self.settings_window = None
+        self.port_checker_window = None
+        self.help_window = None
         self.config = ConfigManager()
         self.worker = UpdateWorker(self)
         self._is_exiting = False
 
     def _setup_icons(self):
-        if not os.path.exists(LOGO_FILE): self._show_fatal_error(f"Icon file not found:\n{LOGO_FILE}"); return False
+        if not os.path.exists(LOGO_FILE): self._show_fatal_error(f"Icon file not found :\n{LOGO_FILE}"); return False
         try:
             self.image_for_tray = Image.open(LOGO_FILE)
             if self.image_for_tray.size[0] > 256 or self.image_for_tray.size[1] > 256:
                 self.image_for_tray = self.image_for_tray.resize((256, 256), Image.Resampling.LANCZOS)
             self.root.after(100, self._apply_root_icon); return True
-        except Exception as e: self._show_fatal_error(f"Failed to load icon file.\nError: {e}"); return False
+        except Exception as e: self._show_fatal_error(f"Failed to load icon file.\nError : {e}"); return False
 
     def _apply_root_icon(self):
         try:
             if self.root.winfo_exists() and os.path.exists(LOGO_FILE): self.root.iconbitmap(LOGO_FILE); set_window_icon_win32(self.root)
-        except Exception as e: logging.warning(f"Could not set icon for root window: {e}")
+        except Exception as e: logging.warning(f"Could not set icon for root window : {e}")
 
     def run(self):
         logging.info(f"Starting {APP_NAME} v{APP_VERSION}")
         if not self._setup_icons(): sys.exit(1)
         setup_styles(self.root)
-        menu = (item('Settings', self.open_settings, default=True), item('Force Update', self.worker.force_update),
-                item('Show My Public IP', self.show_ip), Menu.SEPARATOR, item(f'About {APP_NAME}', self.show_about),
+        
+        menu = (item('Settings', self.open_settings, default=True), 
+                item('Force Update', self.worker.force_update),
+                item('Show My Public IP', self.show_ip),
+                Menu.SEPARATOR,
+                item('Check Service Port', self.open_port_checker),
+                item('Help : Firewall & Port Forwarding', self.open_help),
+                Menu.SEPARATOR,
+                item(f'About {APP_NAME}', self.show_about),
                 item('Exit', self.exit_app))
+                
         self.icon = Icon(APP_NAME, self.image_for_tray, f"{APP_NAME} - Starting...", menu)
         self.worker.start()
         try: self.icon.run_detached(); self.root.mainloop()
-        except Exception as e: logging.critical(f"Error in main loop: {e}", exc_info=True)
+        except Exception as e: logging.critical(f"Error in main loop : {e}", exc_info=True)
         finally: self._cleanup()
 
     def _cleanup(self):
         if self._is_exiting: return
         self._is_exiting = True; logging.info("Cleaning up resources...")
         try: self.worker.stop(); self.icon.stop()
-        except Exception as e: logging.error(f"Error during cleanup: {e}")
+        except Exception as e: logging.error(f"Error during cleanup : {e}")
 
     def _show_fatal_error(self, message):
         logging.critical(message); temp_root = tk.Tk(); temp_root.withdraw()
@@ -663,7 +890,7 @@ class DuckDNSSentryApp:
             has_notify = hasattr(self.icon, 'HAS_NOTIFICATION') and self.icon.HAS_NOTIFICATION
             if self.config.get("Settings", "notifications") == "YES" and has_notify:
                 self.icon.notify(message, f"{APP_NAME} Error" if is_error else f"{APP_NAME}")
-        except Exception as e: logging.error(f"Error updating status: {e}")
+        except Exception as e: logging.error(f"Error updating status : {e}")
 
     def show_modern_dialog(self, title, message, msg_type="info"):
         if not self._is_exiting: ModernMessageBox(self.root, title, message, msg_type)
@@ -678,13 +905,39 @@ class DuckDNSSentryApp:
         if self.settings_window and self.settings_window.winfo_exists(): return self.settings_window.lift()
         self.settings_window = ModernSettingsWindow(self.root, self.config.get_all_settings(), self.save_new_settings)
         self.settings_window.protocol("WM_DELETE_WINDOW", self._on_settings_close)
+        
+    def open_port_checker(self, icon=None, item=None):
+        if self._is_exiting: return
+        if self.port_checker_window and self.port_checker_window.winfo_exists(): return self.port_checker_window.lift()
+        current_domain = self.config.get("DuckDNS", "domain")
+        self.port_checker_window = PortCheckerWindow(self.root, current_domain)
+        self.port_checker_window.protocol("WM_DELETE_WINDOW", self._on_port_checker_close)
+
+    def open_help(self, icon=None, item=None):
+        if self._is_exiting: return
+        if self.help_window and self.help_window.winfo_exists(): return self.help_window.lift()
+        self.help_window = HelpWindow(self.root)
+        self.help_window.protocol("WM_DELETE_WINDOW", self._on_help_close)
 
     def _on_settings_close(self):
-        if self.settings_window: self.settings_window.destroy(); self.settings_window = None
+        # This handler is now mostly a fallback; the window's own protocol handler
+        # in ModernSettingsWindow calls the cleanup method.
+        if self.settings_window:
+            if self.settings_window.winfo_exists():
+                 # Directly call the window's cleanup method to ensure unbinding happens
+                self.settings_window._close_and_cleanup()
+            self.settings_window = None
     
+    # --- BUG Added proper close handlers for new windows ---
+    def _on_port_checker_close(self):
+        if self.port_checker_window: self.port_checker_window.destroy(); self.port_checker_window = None
+        
+    def _on_help_close(self):
+        if self.help_window: self.help_window.destroy(); self.help_window = None
+
     def show_ip(self, icon, item):
         ip = DuckDNSClient().get_public_ip() or "Not available"
-        self.root.after(0, self.show_modern_dialog, "Your Public IP", f"Your current public IP address is:\n\n{ip}", "info")
+        self.root.after(0, self.show_modern_dialog, "Your Public IP", f"Your current public IP address is :\n\n{ip}", "info")
 
     def show_about(self, icon, item):
         about_text = f"{APP_NAME} v{APP_VERSION}\n\nA DuckDNS IP updater with a simple interface.\n\nDeveloped by thirawat27"
@@ -699,9 +952,11 @@ class DuckDNSSentryApp:
         self._is_exiting = True; logging.info("Executing safe exit on main thread.")
         try:
             if self.settings_window and self.settings_window.winfo_exists(): self.settings_window.destroy()
+            if self.port_checker_window and self.port_checker_window.winfo_exists(): self.port_checker_window.destroy()
+            if self.help_window and self.help_window.winfo_exists(): self.help_window.destroy()
             self.worker.stop(); self.icon.stop()
             if self.root.winfo_exists(): self.root.destroy()
-        except Exception as e: logging.error(f"Error during safe exit: {e}"); sys.exit(1)
+        except Exception as e: logging.error(f"Error during safe exit : {e}"); sys.exit(1)
 
 # --- Program Entry Point ---
 def show_warning_message(title, message):
@@ -721,8 +976,8 @@ if __name__ == "__main__":
         show_warning_message("Already Running", f"{APP_NAME} is already running.\nCheck the system tray.")
         sys.exit(1)
     except Exception as e:
-        logging.critical(f"An unexpected error occurred: {e}", exc_info=True)
-        show_warning_message("Application Error", f"An unexpected error occurred. Please check the log file for details.\n\nError: {e}")
+        logging.critical(f"An unexpected error occurred : {e}", exc_info=True)
+        show_warning_message("Application Error", f"An unexpected error occurred. Please check the log file for details.\n\nError : {e}")
         sys.exit(1)
     finally:
         try: lock.release()

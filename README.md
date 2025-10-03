@@ -1,6 +1,6 @@
 # DuckDNS Connector
 
-**DuckDNS Connector** is a lightweight, modern, and easy-to-use desktop application for Windows that automatically keeps your DuckDNS domains updated with your public IP address. It runs silently in the system tray, requires minimal setup, and provides notifications to keep you informed.
+**DuckDNS Connector** is a lightweight, modern, and easy-to-use desktop application for Windows that automatically keeps your DuckDNS domains updated with your public IP address. It runs silently in the system tray, requires minimal setup, and provides helpful tools and notifications to keep you informed.
 
 This application is built with Python and its native `tkinter` library, styled with a modern, dark theme for a clean user interface.
 
@@ -15,6 +15,8 @@ Developed by **thirawat27**.
 -   **Smart Updates:** Only sends an update request to DuckDNS when your public IP address has actually changed, preventing unnecessary API calls.
 -   **Modern UI:** A clean and simple settings panel with a dark theme, built with standard Python libraries.
 -   **Notifications:** Optional desktop notifications for successful updates or errors.
+-   **Built-in Port Checker:** Includes a utility to test if a specific port on your domain is open and accessible from the internet, which is perfect for checking if your service (like a web or game server) is correctly configured.
+-   **Help & Port Forwarding Guide:** An integrated guide that explains the basics of firewalls and port forwarding to help new users with their initial network setup.
 -   **Lightweight & Simple:** Just enter your DuckDNS domain and token, and the app handles the rest.
 
 ---
@@ -62,6 +64,8 @@ You can easily install DuckDNS Connector on your Windows machine by following th
 Once configured, DuckDNS Connector will run silently in the background. You can right-click the tray icon at any time to:
 -   **Force Update:** Immediately check and update your IP address.
 -   **Show My Public IP:** Display your current public IP address.
+-   **Check Service Port:** Open the utility to test if a port is open.
+-   **Help : Firewall & Port Forwarding:** View a simple guide to network setup.
 -   **Open Settings:** Change your configuration.
 -   **Exit:** Close the application.
 
@@ -91,10 +95,11 @@ If you prefer to build the application from the source code, follow these steps.
     ```
 
 3.  **Install Dependencies:**
-    (Ensure you have a `requirements.txt` file in the project root.)
+    Install the required packages using pip:
     ```bash
-    pip install -r requirements.txt
+    pip install requests pystray Pillow filelock pywin32
     ```
+    *(Note: `pywin32` is only required for Windows-specific features like setting the window icon properly.)*
 
 4.  **Run the Application:**
     ```bash
