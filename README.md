@@ -101,7 +101,7 @@ If you prefer to build the application from the source code, follow these steps.
     ```
     *(Note: `pywin32` is only required for Windows-specific features like setting the window icon properly.)*
 
-4.  **Run the Application:**
+4.  **Run the Application :**
     ```bash
     python duckdns_connector.py
     ```
