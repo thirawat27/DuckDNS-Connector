@@ -10,26 +10,26 @@ Developed by **thirawat27**.
 
 ## Features
 
--   **Automatic Updates:** Runs in the background and checks your IP address at a user-defined interval.
--   **System Tray Integration:** Manages all operations from a convenient icon in your system tray, staying out of your way.
--   **Smart Updates:** Only sends an update request to DuckDNS when your public IP address has actually changed, preventing unnecessary API calls.
--   **Modern UI:** A clean and simple settings panel with a dark theme, built with standard Python libraries.
--   **Notifications:** Optional desktop notifications for successful updates or errors.
--   **Built-in Port Checker:** Includes a utility to test if a specific port on your domain is open and accessible from the internet, which is perfect for checking if your service (like a web or game server) is correctly configured.
--   **Help & Port Forwarding Guide:** An integrated guide that explains the basics of firewalls and port forwarding to help new users with their initial network setup.
--   **Lightweight & Simple:** Just enter your DuckDNS domain and token, and the app handles the rest.
+-   **Automatic Updates :** Runs in the background and checks your IP address at a user-defined interval.
+-   **System Tray Integration :** Manages all operations from a convenient icon in your system tray, staying out of your way.
+-   **Smart Updates :** Only sends an update request to DuckDNS when your public IP address has actually changed, preventing unnecessary API calls.
+-   **Modern UI :** A clean and simple settings panel with a dark theme, built with standard Python libraries.
+-   **Notifications :** Optional desktop notifications for successful updates or errors.
+-   **Built-in Port Checker :** Includes a utility to test if a specific port on your domain is open and accessible from the internet, which is perfect for checking if your service (like a web or game server) is correctly configured.
+-   **Help & Port Forwarding Guide :** An integrated guide that explains the basics of firewalls and port forwarding to help new users with their initial network setup.
+-   **Lightweight & Simple :** Just enter your DuckDNS domain and token, and the app handles the rest.
 
 ---
 
 ## Installation
 
-You can easily install DuckDNS Connector on your Windows machine by following these steps:
+You can easily install DuckDNS Connector on your Windows machine by following these steps :
 
-1.  **Download the Installer:**
+1.  **Download the Installer :**
     *   Go to the [**Releases**](https://github.com/thirawat27/DuckDNS-Connector/releases) page of this repository.
     *   Download the latest `DuckDNS-Connector-vX.X.X-Setup.exe` file.
 
-2.  **Run the Installer:**
+2.  **Run the Installer :**
     *   Double-click the downloaded `.exe` file.
     *   Windows Defender SmartScreen might show a warning because it's a new application. If this happens, click on `More info` and then `Run anyway`.
     *   Follow the on-screen instructions. You can choose to have the application start automatically when you log in to Windows.
@@ -45,28 +45,28 @@ You can easily install DuckDNS Connector on your Windows machine by following th
 
 1.  **Find the Icon:** Locate the DuckDNS Connector icon in your system tray. You may need to click the small upward arrow (^) to see all icons.
 
-2.  **Open Settings:**
+2.  **Open Settings :**
     *   **Right-click** on the icon to open the menu.
     *   Select **"Settings"**.
 
-3.  **Configure Your Details:**
-    *   **Domain:** Enter your DuckDNS subdomain **only** (e.g., if your domain is `my-home.duckdns.org`, you just need to enter `my-home`).
-    *   **Token:** Paste your unique token from the [DuckDNS website](https://www.duckdns.org/).
-    *   **Update Interval:** Choose how often the application should check for IP changes (default is 5 minutes).
-    *   **Notifications:** Select "YES" or "NO" to enable or disable desktop notifications.
+3.  **Configure Your Details :**
+    *   **Domain :** Enter your DuckDNS subdomain **only** (e.g., if your domain is `my-home.duckdns.org`, you just need to enter `my-home`).
+    *   **Token :** Paste your unique token from the [DuckDNS website](https://www.duckdns.org/).
+    *   **Update Interval :** Choose how often the application should check for IP changes (default is 5 minutes).
+    *   **Notifications :** Select "YES" or "NO" to enable or disable desktop notifications.
 
-4.  **Save Your Settings:**
+4.  **Save Your Settings :**
     *   Click the **"Save Changes"** button. The application will save your settings and immediately perform an update check.
     *   You will receive a notification confirming that the settings have been saved.
 
 ### Daily Operation
 
-Once configured, DuckDNS Connector will run silently in the background. You can right-click the tray icon at any time to:
--   **Force Update:** Immediately check and update your IP address.
--   **Show My Public IP:** Display your current public IP address.
--   **Check Service Port:** Open the utility to test if a port is open.
--   **Help : Firewall & Port Forwarding:** View a simple guide to network setup.
--   **Open Settings:** Change your configuration.
+Once configured, DuckDNS Connector will run silently in the background. You can right-click the tray icon at any time to :
+-   **Force Update :** Immediately check and update your IP address.
+-   **Show My Public IP :** Display your current public IP address.
+-   **Check Service Port :** Open the utility to test if a port is open.
+-   **Help : Firewall & Port Forwarding :** View a simple guide to network setup.
+-   **Open Settings :** Change your configuration.
 -   **Exit:** Close the application.
 
 ---
@@ -82,20 +82,20 @@ If you prefer to build the application from the source code, follow these steps.
 
 ### Steps
 
-1.  **Clone the Repository:**
+1.  **Clone the Repository :**
     ```bash
     git clone https://github.com/thirawat27/DuckDNS-Connector.git
     cd DuckDNS-Connector
     ```
 
-2.  **Create a Virtual Environment (Recommended):**
+2.  **Create a Virtual Environment (Recommended) :**
     ```bash
     python -m venv venv
     venv\Scripts\activate
     ```
 
-3.  **Install Dependencies:**
-    Install the required packages using pip:
+3.  **Install Dependencies :**
+    Install the required packages using pip :
     ```bash
     pip install requests pystray Pillow filelock pywin32
     ```
@@ -106,7 +106,7 @@ If you prefer to build the application from the source code, follow these steps.
     python duckdns_connector.py
     ```
 
-5.  **Build the Executable (Optional):**
+5.  **Build the Executable (Optional) :**
     To create a standalone `.exe` file, you need PyInstaller. Use the provided `build.spec` file for configuration.
     ```bash
     pip install pyinstaller
